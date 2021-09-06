@@ -1,0 +1,24 @@
+{
+	"name": "eventblobcreatye",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Eventdrivenpipeline",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/mydata/blobs/",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/8538a0fa-7f55-4c01-b772-47b7a85158cb/resourceGroups/COGRG/providers/Microsoft.Storage/storageAccounts/gopiacc",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
