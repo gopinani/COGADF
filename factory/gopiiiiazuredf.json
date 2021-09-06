@@ -1,0 +1,9 @@
+{
+	"name": "gopiiiiazuredf",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "d4edc455-c8b1-47b8-8ae9-d61e21ec73ed",
+		"tenantId": "58d28cce-3b10-48be-bc93-612c7bc7f70c"
+	}
+}

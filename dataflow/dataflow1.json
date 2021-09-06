@@ -1,0 +1,51 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlcustomertable",
+						"type": "DatasetReference"
+					},
+					"name": "AzureSQLcustomerTable"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureSQLDimCustomer",
+						"type": "DatasetReference"
+					},
+					"name": "AZureSQLDimCustomerTable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AzureSQLDimCustomer",
+						"type": "DatasetReference"
+					},
+					"name": "AzureSQLDimcustomer"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CreatedHahkey"
+				},
+				{
+					"name": "Exists1"
+				},
+				{
+					"name": "Lookup1"
+				},
+				{
+					"name": "LOOKupDates"
+				},
+				{
+					"name": "AlterRow1"
+				}
+			],
+			"script": "source(output(\n\t\tCustomerID as integer,\n\t\tNameStyle as boolean,\n\t\tTitle as string,\n\t\tFirstName as string,\n\t\tMiddleName as string,\n\t\tLastName as string,\n\t\tSuffix as string,\n\t\tCompanyName as string,\n\t\tSalesPerson as string,\n\t\tEmailAddress as string,\n\t\tPhone as string,\n\t\tPasswordHash as string,\n\t\tPasswordSalt as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> AzureSQLcustomerTable\nsource(output(\n\t\tCustomerID as integer,\n\t\tTitle as string,\n\t\tFirstName as string,\n\t\tLastName as string,\n\t\tInsertData as timestamp,\n\t\tUpdateDate as timestamp,\n\t\tHashKey as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> AZureSQLDimCustomerTable\nAzureSQLcustomerTable derive(CreatedHashkey = sha1(FirstName+LastName+CompanyName)) ~> CreatedHahkey\nCreatedHahkey, AZureSQLDimCustomerTable exists(CreatedHashkey == HashKey,\n\tnegate:false,\n\tbroadcast: 'auto')~> Exists1\nExists1, AZureSQLDimCustomerTable lookup(AzureSQLcustomerTable@CustomerID == AZureSQLDimCustomerTable@CustomerID,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> Lookup1\nLookup1 derive(InsertData = iif(isNull(InsertData),currentTimestamp(),InsertData),\n\t\tUpdatedDate = currentTimestamp()) ~> LOOKupDates\nLOOKupDates alterRow(upsertIf(true())) ~> AlterRow1\nAlterRow1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tCustomerID as integer,\n\t\tTitle as string,\n\t\tFirstName as string,\n\t\tLastName as string,\n\t\tInsertData as timestamp,\n\t\tUpdateDate as timestamp,\n\t\tHashKey as string\n\t),\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['CustomerID'],\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\terrorHandlingOption: 'stopOnFirstError',\n\tmapColumn(\n\t\tCustomerID = AzureSQLcustomerTable@CustomerID,\n\t\tTitle = AzureSQLcustomerTable@Title,\n\t\tFirstName = AzureSQLcustomerTable@FirstName,\n\t\tLastName = AzureSQLcustomerTable@LastName,\n\t\tInsertData,\n\t\tUpdateDate,\n\t\tHashKey = CreatedHashkey\n\t)) ~> AzureSQLDimcustomer"
+		}
+	}
+}
